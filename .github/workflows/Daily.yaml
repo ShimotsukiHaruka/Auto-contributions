@@ -1,0 +1,76 @@
+name: Random Daily Automatic Commit
+
+# ------------------------------
+# 1. 定时触发设置 (Cron Schedule)
+# ------------------------------
+on:
+  schedule:
+    # cron 表达式格式: '分 小时 日 月 周'
+    # '0 1 * * *' 表示每天 UTC 时间凌晨 1 点执行
+    # 对于 UTC+8 时区（例如中国大陆、台湾、香港），这对应于本地时间早上 9:00 AM
+    - cron: '0 1 * * *' 
+  
+  # 允许在 GitHub Actions 界面手动运行此工作流
+  workflow_dispatch:
+
+# ------------------------------
+# 2. 工作流定义
+# ------------------------------
+jobs:
+  auto_commit:
+    # 运行环境
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 步骤 1: 检出仓库代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      # 步骤 2: 设置 Git 用户信息
+      - name: Set up Git config
+        run: |
+          # ❗ 必须替换为您的 GitHub 用户名和已验证邮箱
+          # 只有使用已验证邮箱的提交才会计入贡献值
+          git config --global user.name "ShimotsukiHaruka"
+          git config --global user.email "xiaotlinus@gmail.com"
+          
+      # 步骤 3: 生成随机内容并提交
+      - name: Generate Random Content and Commit
+        run: |
+          # --- 随机变量生成 ---
+          
+          # 1. 生成一个 1 到 1000 之间的随机数
+          RANDOM_NUM=$(shuf -i 1-1000 -n 1)
+          
+          # 2. 提交信息数组，随机选择一条信息，增加提交日志的随机性
+          MESSAGES=(
+            "Daily activity log update" 
+            "Checking random system data" 
+            "Automated routine commit: ${RANDOM_NUM}" 
+            "Routine maintenance check"
+          )
+          RANDOM_MSG_INDEX=$(( RANDOM % ${#MESSAGES[@]} ))
+          COMMIT_MESSAGE=${MESSAGES[${RANDOM_MSG_INDEX}]}
+          
+          # --- 文件内容写入 ---
+          
+          # 定义要修改的文件名
+          LOG_FILE="daily_contribution_log.txt"
+          
+          # 写入新的内容，使用时间和随机数确保文件有实际更改
+          echo "--- Auto Commit Log ---" > ${LOG_FILE}
+          echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')" >> ${LOG_FILE}
+          echo "Random Check ID: ${RANDOM_NUM}" >> ${LOG_FILE}
+          echo "--- End of Log ---" >> ${LOG_FILE}
+          
+          # --- Git 操作 ---
+          
+          # 添加修改的文件
+          git add ${LOG_FILE}
+          
+          # 提交更改，使用随机信息
+          git commit -m "${COMMIT_MESSAGE}"
+          
+          # 推送到远程仓库。GitHub Actions 自动提供 GITHUB_TOKEN 用于认证。
+          # 默认分支通常是 main 或 master
+          git push
