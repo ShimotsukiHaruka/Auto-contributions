@@ -1,1 +1,1 @@
-# Auto-contributions
+# Daily-Algorithms
